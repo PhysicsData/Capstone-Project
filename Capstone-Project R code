@@ -4,6 +4,7 @@
 #######datasets link
 #######http://open.canada.ca/data/en/dataset/c1b0f627-8c29-427c-ab73-33968ad9176e
 
+
 # change multiple file names
 
 file_names <- list.files(pattern="*.csv")
@@ -14,20 +15,29 @@ new_names
 
 # read multiple files using for loop
 # calculate the amount of award for each year and store them in new file
+
 fileNames <- Sys.glob("*.csv")
+fileNames
 for (fileName in fileNames) {
   # read original data:
   sample <- read.csv(fileName,
                      header = TRUE,
                      sep = ",")
- 
+  
   # create new data based on contents of amount of award per year 
   allaward <- data.frame(File = fileName, award = sum(sample$AwardAmount))
   
   # write new data to separate file
-  write.table(allaward, "award.csv", append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE)}
+  write.table(allaward, 
+              "award.csv",
+              append = TRUE,
+              sep = ",",
+              row.names = FALSE,
+              col.names = FALSE)}
 
-#clean the new data and organize them in the file
+
+#clean the new dfile award and organize it
+
 award <-read.csv("award.csv", header = FALSE,)
 names(award)[c(1, 2)]<-c("V1"="Year", "V2"="Award")
 award$Year<-sub('\\..*', '',award$Year)
@@ -40,3 +50,23 @@ plot(award, type="o", col="blue", ylab="Amount ($m)",font=4 ,
 # Create a main title with 
 title(main="Amount of Award per year", font.main=4)
 
+
+#cleaning Data set
+for (fileName1 in fileNames) {
+  
+  # read old data
+  sample <- read.csv(fileName1,
+                     header = TRUE,
+                     sep="," )
+  
+  # Delete columns that duplicate in French 
+   sample = sample[,-c(7, 9, 15, 17, 20, 23, 25, 28,30)]
+  # rename columns
+  names(sample)[c(2, 3, 5,12, 15, 20, 21)]<-c("Name.Nom"="Name", "Department.Département"="Department", 
+                                              "Institution.Établissement"="Institution","ProgramNaneEN"="ProgramName", 
+                                              "CommitteeNameEN"="CommitteeName",
+                                              "ResearchSubjectGroupEN"="ResearchSubjectGroup", 
+                                              "ResearchSubjectEN"="ResearchSubject")
+  # write new data to separate file
+  write.table(sample,fileName1, sep=",", col.names = TRUE, row.names = FALSE)
+}
