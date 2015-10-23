@@ -5,68 +5,56 @@
 #######http://open.canada.ca/data/en/dataset/c1b0f627-8c29-427c-ab73-33968ad9176e
 
 
-# change multiple file names
 
-file_names <- list.files(pattern="*.csv")
-file_names
-new_names <- paste("", seq(1991, length.out = length(file_names)), ".csv")
-file.rename(from=file_names, to=new_names) 
-new_names
 
-# read multiple files using for loop
+
 # calculate the amount of award for each year and store them in new file
 
-fileNames <- Sys.glob("*.csv")
-fileNames
-for (fileName in fileNames) {
+# changeing multiple file names
+file_names <- list.files(pattern="*.csv")
+new_names <- paste("", seq(1992, length.out = length(file_names)), ".csv")
+file.rename(from=file_names, to=new_names) 
+
+# reading multiple files all in same time using for loop
+filelist <- Sys.glob("*.csv")
+fileNumbers <- seq(filelist )
+library(plyr)
+
+  for (fileNumber in fileNumbers) {
+        newFileName <-  paste("new-", sub("*.csv", "", filelist[fileNumber]), ".csv", sep = "")
+  
   # read original data:
-  sample <- read.csv(fileName,
-                     header = TRUE,
-                     sep = ",")
-  
-  # create new data based on contents of amount of award per year 
-  allaward <- data.frame(File = fileName, award = sum(sample$AwardAmount))
-  
-  # write new data to separate file
-  write.table(allaward, 
-              "award.csv",
-              append = TRUE,
-              sep = ",",
-              row.names = FALSE,
-              col.names = FALSE)}
-
-
-#clean the new dfile award and organize it
-
-award <-read.csv("award.csv", header = FALSE,)
-names(award)[c(1, 2)]<-c("V1"="Year", "V2"="Award")
-award$Year<-sub('\\..*', '',award$Year)
-award$Award<-paste(format(award$Award/1000000),
-                   sep="")
-# Graph the amount of award per year
-plot(award, type="o", col="blue", ylab="Amount ($m)",font=4 , 
-     lwd = 5, cex = 1.5, font.lab=2)
-
-# Create a main title with 
-title(main="Amount of Award per year", font.main=4)
-
-
-#cleaning Data set
-for (fileName1 in fileNames) {
-  
-  # read old data
-  sample <- read.csv(fileName1,
-                     header = TRUE,
-                     sep="," )
+  sample <- read.csv(filelist[fileNumber], header = TRUE, sep = ",")
   
   # Delete columns that duplicate in French 
-   sample = sample[,-c(7, 9, 15, 17, 20, 23, 25, 28,30)]
+  sample = sample[,-c(7, 9, 15, 17, 20, 23, 25, 28,30)]
   # rename columns
   names(sample)[c(2, 3, 5,12, 15, 20, 21)]<-c("Name.Nom"="Name", "Department.Département"="Department", 
                                               "Institution.Établissement"="Institution","ProgramNaneEN"="ProgramName", 
                                               "CommitteeNameEN"="CommitteeName",
                                               "ResearchSubjectGroupEN"="ResearchSubjectGroup", 
                                               "ResearchSubjectEN"="ResearchSubject")
-  # write new data to separate file
-  write.table(sample,fileName1, sep=",", col.names = TRUE, row.names = FALSE)
+ 
+  
+sample2<-(count(sample, "Institution", ))
+sample2<-sample2[order(sample2$freq,  decreasing = TRUE),]
+# write new data to separate file
+write.table(sample2, newFileName, sep = ",", row.names = FALSE, col.names = TRUE)
+ 
+# create a new dataset based on contents of the amount of award per year  
+allaward <- data.frame( File = filelist[fileNumber],award = sum(sample$AwardAmount))
+write.table(allaward, "award.csv", append = TRUE, sep = ",", row.names = FALSE, col.names = FALSE)
 }
+
+#clean the new data and organize them in the file
+award <-read.csv("award.csv", header = FALSE,)
+names(award)[c(1, 2)]<-c("V1"="Year", "V2"="Award")
+award$Year<-sub('\\..*', '',award$Year)
+award$Award<-paste(format(award$Award/1000000), sep="")
+
+# Graph the amount of award per year
+plot(award, type="o", col="blue", ylab="Amount ($m)",font=4 , 
+     lwd = 5, cex = 1.5, font.lab=2)
+
+
+
